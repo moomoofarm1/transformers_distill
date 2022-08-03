@@ -1,3 +1,131 @@
+name: Build docker images (scheduled)
+
+on:
+  push:
+    branches:
+      - integration-8bit
+
+concurrency:
+  group: docker-images-builds
+  cancel-in-progress: false
+
+jobs:
+  latest-docker:
+    name: "Latest PyTorch + TensorFlow [dev]"
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Check out code
+        uses: actions/checkout@v2
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+      -
+        name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./docker/transformers-all-latest-gpu
+          build-args: |
+            REF=main
+          push: true
+          tags: huggingface/transformers-all-latest-gpu-test
+
+
+
+
+
+Yih-Dar SHIEH
+  1 hour ago
+change that file to above, basically
+trigger the workflow when push to your branch integration-8bit
+ push the built image with a tag (tags: huggingface/transformers-all-latest-gpu-test)
+as we don't want to break the one used for CI
+:+1:
+1
+
+
+
+Younes Belkada
+  1 hour ago
+so this will create new Docker images whenever we push on the branch integration-8bit?
+
+
+Younes Belkada
+  1 hour ago
+Okay got it perfect!
+
+
+Yih-Dar SHIEH
+  1 hour ago
+yes, but it is only temporary, we will change it back in next commit
+:+1:
+1
+
+
+
+Yih-Dar SHIEH
+  1 hour ago
+once pushed, you should see something running
+https://github.com/huggingface/transformers/actions/workflows/build-docker-images.yml
+
+
+Yih-Dar SHIEH
+  1 hour ago
+let me know if you see it and how it goes
+
+
+Younes Belkada
+  1 hour ago
+Ohh ok okay
+
+
+Younes Belkada
+  1 hour ago
+let me try and let you know :fire:
+:+1:
+1
+
+
+
+Younes Belkada
+  1 hour ago
+Okay just pushed
+
+
+Younes Belkada
+  1 hour ago
+I can see it here: https://github.com/huggingface/transformers/actions/runs/2788226010
+:fire:
+1
+
+
+
+Yih-Dar SHIEH
+  1 hour ago
+ok, let just wait it finished. You can work on sth else for now :slightly_smiling_face:
+
+
+Younes Belkada
+  1 hour ago
+Great thanks a lot!!
+New
+
+
+Yih-Dar SHIEH
+  15 minutes ago
+Change the previous file build-docker-images.yml
+on:
+  push:
+    branches:
+      - any_other_branch 
+change the following file
+.github/workflows/self-scheduled.yml
 name: Self-hosted runner (scheduled)
 
 # Note that each job's dependencies go into a corresponding docker file.
@@ -109,7 +237,7 @@ jobs:
           name: ${{ matrix.machine_type }}_run_all_tests_gpu_${{ env.matrix_folders }}_test_reports
           path: /transformers/reports/${{ matrix.machine_type }}_tests_gpu_${{ matrix.folders }}
 
- run_tests_multi_gpu:
+  run_tests_multi_gpu:
     name: Model tests
     strategy:
       fail-fast: false
